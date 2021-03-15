@@ -46,11 +46,12 @@ class _HomeScreenState extends State<HomeScreen> {
         .queryProductDetails(productIds); // Returns a list of [ProductDetails]
     setState(() {
       products = response.productDetails;
+      processTransaction();
     });
   }
 
   // We use this function to make sure that all of the code
-  void processTransaction() {
+  void processTransaction() async {
     PurchaseDetails purchase = getPurchaseById('android.test.purchased');
 
     if (purchase != null && purchase.status == PurchaseStatus.purchased) {
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
     // We have to call this function or the purchase will be refunded in 30 days.
-    InAppPurchaseConnection.instance.completePurchase(purchase);
+    await InAppPurchaseConnection.instance.completePurchase(purchase);
   }
 
   // Simple function for actually displaying the purchase sheet.
@@ -71,7 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // We have to make sure that the purchase exists before we give it to the user.
   PurchaseDetails getPurchaseById(String id) {
-    return _purchases.firstWhere((element) => element.productID == id);
+    return _purchases.firstWhere((element) => element.productID == id,
+        orElse: () => null);
   }
 
   // A collection of all the function in the app.
@@ -82,11 +84,11 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
     _fetchProducts();
-    processTransaction();
 
     final Stream purchaseUpdates =
         InAppPurchaseConnection.instance.purchaseUpdatedStream;
     _subscription = purchaseUpdates.listen((purchases) {
+      processTransaction();
       setState(() {
         _purchases.addAll(purchases);
       });
@@ -110,7 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('IAPP Demo'),
-        actions: [],
       ),
       body: Column(
         children: [
