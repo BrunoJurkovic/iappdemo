@@ -20,6 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // We have to load our products from the relevant store front.
   List<ProductDetails> products = [];
 
+  // This is a list of all the purchases that will be made later on
+  // inside the app.
   List<PurchaseDetails> _purchases = [];
 
   // This function takes the existing gems and
@@ -47,6 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // We use this function to make sure that all of the code
   void processTransaction() {
     PurchaseDetails purchase = getPurchaseById('android.test.purchased');
 
@@ -55,19 +58,23 @@ class _HomeScreenState extends State<HomeScreen> {
         gems += 20;
       });
     }
+    // We have to call this function or the purchase will be refunded in 30 days.
     InAppPurchaseConnection.instance.completePurchase(purchase);
   }
 
+  // Simple function for actually displaying the purchase sheet.
   void _makePurchase(ProductDetails product) {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
     InAppPurchaseConnection.instance
         .buyConsumable(purchaseParam: purchaseParam);
   }
 
+  // We have to make sure that the purchase exists before we give it to the user.
   PurchaseDetails getPurchaseById(String id) {
     return _purchases.firstWhere((element) => element.productID == id);
   }
 
+  // A collection of all the function in the app.
   Future<void> initialization() async {
     final bool available = await InAppPurchaseConnection.instance.isAvailable();
     if (!available) {
@@ -88,6 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    initialization();
     super.initState();
   }
 
@@ -95,17 +103,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _subscription.cancel();
     super.dispose();
-  }
-
-  void _handlePurchaseUpdates(purchases) {
-    Stream purchaseUpdated =
-        InAppPurchaseConnection.instance.purchaseUpdatedStream;
-    _subscription =
-        purchaseUpdated.listen((purchaseDetailsList) {}, onDone: () {
-      _subscription.cancel();
-    }, onError: (error) {
-      // handle error here.
-    });
   }
 
   @override
@@ -138,6 +135,19 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text(
                 'Consume 2',
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.only(top: 100),
+            child: ElevatedButton(
+              onPressed: () {
+                _makePurchase(products[
+                    0]); // As there is only one product, we know where it is in the map.
+              },
+              child: Text(
+                'Buy more gems!',
                 style: TextStyle(fontSize: 30),
               ),
             ),
