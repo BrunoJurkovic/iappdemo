@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:iappdemo/screens/home.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 void main() {
+  // We have to initialize the plugin because on Android
+  // you can't make purchases unless you run this function.
+  InAppPurchaseConnection.enablePendingPurchases();
   runApp(MyApp());
 }
 
